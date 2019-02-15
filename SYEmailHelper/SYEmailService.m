@@ -12,31 +12,28 @@
 
 @implementation SYEmailService
 
-+ (NSArray <SYEmailService *> *)allServices
-{
++ (NSArray <SYEmailService *> *)allServices {
     NSMutableArray <SYEmailService *> *services = [NSMutableArray array];
+
+    [services addObject:
+            [SYEmailServiceNative new]];
     
     [services addObjectsFromArray:
-     [SYEmailServiceApp allThirdPartyApps]];
-    
+            [SYEmailServiceApp allThirdPartyApps]];
+
     [services addObject:
-     [SYEmailServiceNative new]];
-    
-    [services addObject:
-     [SYEmailServicePasteboard new]];
-    
+            [SYEmailServicePasteboard new]];
+
     return [services copy];
 }
 
-+ (NSArray <SYEmailService *> *)availableServices
-{
++ (NSArray <SYEmailService *> *)availableServices {
     return [[self allServices] filteredArrayUsingPredicate:[NSPredicate predicateWithBlock:^BOOL(SYEmailService *service, id _) {
         return service.isAvailable;
     }]];
 }
 
-- (BOOL)isAvailable
-{
+- (BOOL)isAvailable {
     return NO;
 }
 
@@ -44,10 +41,14 @@
                 subject:(NSString *)subject
                    body:(NSString *)body
                parentVC:(UIViewController *)parentVC
-             completion:(void (^)(BOOL, NSError *))completion
-{
+             completion:(void (^)(BOOL, NSError *))completion {
     if (completion)
         completion(NO, nil);
+}
+
+
+- (void)openInbox {
+    // no-op
 }
 
 @end
@@ -56,48 +57,43 @@
 
 @implementation SYEmailServiceApp
 
-+ (NSArray <SYEmailServiceApp *> *)allThirdPartyApps
-{
++ (NSArray <SYEmailServiceApp *> *)allThirdPartyApps {
     NSMutableArray <SYEmailServiceApp *> *services = [NSMutableArray array];
-    
+
     [services addObject:[self gmailService]];
     [services addObject:[self googleInboxService]];
     [services addObject:[self microsoftOutlookService]];
-    
+
     return [services copy];
 }
 
-+ (NSArray <SYEmailServiceApp *> *)availableThirdPartyApps
-{
++ (NSArray <SYEmailServiceApp *> *)availableThirdPartyApps {
     return [[self allThirdPartyApps] filteredArrayUsingPredicate:[NSPredicate predicateWithBlock:^BOOL(SYEmailServiceApp *service, id _) {
         return service.isAvailable;
     }]];
 }
 
-+ (instancetype)gmailService
-{
++ (instancetype)gmailService {
     return [SYEmailServiceApp serviceWithName:@"Gmail"
-                                      baseURL:@"googlegmail://co"
+                                      baseURL:@"googlegmail://"
                              parameterAddress:@"to"
                              parameterSubject:@"subject"
                                 parameterBody:@"body"
                             parameterCallback:nil];
 }
 
-+ (instancetype)googleInboxService
-{
++ (instancetype)googleInboxService {
     return [SYEmailServiceApp serviceWithName:@"Google Inbox"
-                                      baseURL:@"inbox-gmail://co"
+                                      baseURL:@"inbox-gmail://"
                              parameterAddress:@"to"
                              parameterSubject:@"subject"
                                 parameterBody:@"body"
                             parameterCallback:nil];
 }
 
-+ (instancetype)microsoftOutlookService
-{
++ (instancetype)microsoftOutlookService {
     return [SYEmailServiceApp serviceWithName:@"Microsoft Outlook"
-                                      baseURL:@"ms-outlook://compose"
+                                      baseURL:@"ms-outlook://"
                              parameterAddress:@"to"
                              parameterSubject:@"subject"
                                 parameterBody:@"body"
@@ -109,20 +105,18 @@
                parameterAddress:(NSString *)parameterAddress
                parameterSubject:(NSString *)parameterSubject
                   parameterBody:(NSString *)parameterBody
-              parameterCallback:(NSString *)parameterCallback
-{
+              parameterCallback:(NSString *)parameterCallback {
     SYEmailServiceApp *instance = [[self alloc] init];
-    instance.name                   = name;
-    instance->_baseURL              = baseUrl;
-    instance->_parameterBody        = parameterBody;
-    instance->_parameterAddress     = parameterAddress;
-    instance->_parameterSubject     = parameterSubject;
-    instance->_parameterCallback    = parameterCallback;
+    instance.name = name;
+    instance->_baseURL = baseUrl;
+    instance->_parameterBody = parameterBody;
+    instance->_parameterAddress = parameterAddress;
+    instance->_parameterSubject = parameterSubject;
+    instance->_parameterCallback = parameterCallback;
     return instance;
 }
 
-- (BOOL)isAvailable
-{
+- (BOOL)isAvailable {
     return [[UIApplication sharedApplication] canOpenURL:[NSURL URLWithString:self.baseURL]];
 }
 
@@ -130,20 +124,19 @@
                 subject:(NSString *)subject
                    body:(NSString *)body
                parentVC:(UIViewController *)parentVC
-             completion:(void(^)(BOOL openedApp, NSError *nativeError))completion
-{
+             completion:(void (^)(BOOL openedApp, NSError *nativeError))completion {
     NSURLComponents *components = [NSURLComponents componentsWithString:self.baseURL];
     NSMutableArray <NSURLQueryItem *> *queryItems = [NSMutableArray array];
-    
+
     if (self.parameterAddress && address)
         [queryItems addObject:[NSURLQueryItem queryItemWithName:self.parameterAddress value:address]];
-    
+
     if (self.parameterSubject && subject)
         [queryItems addObject:[NSURLQueryItem queryItemWithName:self.parameterSubject value:subject]];
-    
+
     if (self.parameterBody)
         [queryItems addObject:[NSURLQueryItem queryItemWithName:self.parameterBody value:body]];
-    
+
     /*
     if (self.parameterCallback)
     {
@@ -151,45 +144,48 @@
         [queryItems addObject:[NSURLQueryItem queryItemWithName:@"x-success" value:@"AppScheme://"]];
     }
     */
-    
+
     components.queryItems = [queryItems copy];
 
     BOOL result = [[UIApplication sharedApplication] openURL:components.URL];
-    
+
     NSError *error = nil;
     if (!result)
         error = [NSError errorWithDomain:SYEmailHelperErrorDomain
                                     code:SYEmailHelperErrorCode_CouldntOpenApp
-                                userInfo:@{NSLocalizedDescriptionKey:@"Couldn't open app"}];
-    
+                                userInfo:@{NSLocalizedDescriptionKey: @"Couldn't open app"}];
+
     if (completion)
         completion(NO, error);
 }
+
+
+- (void)openInbox {
+    [[UIApplication sharedApplication] openURL:[NSURL URLWithString:self.baseURL]];
+}
+
 
 @end
 
 #pragma mark - In-App Native dialog
 
-@interface SYEmailServiceNative () <MFMailComposeViewControllerDelegate>
-@property (nonatomic, strong) id selfRetain;
-@property (nonatomic, copy) void(^completionBlock)(BOOL openedApp, NSError *nativeError);
+@interface SYEmailServiceNative()<MFMailComposeViewControllerDelegate>
+@property(nonatomic, strong) id selfRetain;
+@property(nonatomic, copy) void (^completionBlock)(BOOL openedApp, NSError *nativeError);
 @end
 
 @implementation SYEmailServiceNative
 
-- (instancetype)init
-{
+- (instancetype)init {
     self = [super init];
-    if (self)
-    {
-        self.name = @"Apple Mail";
+    if (self) {
+        self.name = @"Mail (Default)";
         self.completionBlock = nil;
     }
     return self;
 }
 
-- (BOOL)isAvailable
-{
+- (BOOL)isAvailable {
     return [MFMailComposeViewController canSendMail];
 }
 
@@ -197,31 +193,34 @@
                 subject:(NSString *)subject
                    body:(NSString *)body
                parentVC:(UIViewController *)parentVC
-             completion:(void(^)(BOOL openedApp, NSError *nativeError))completion
-{
+             completion:(void (^)(BOOL openedApp, NSError *nativeError))completion {
     self.selfRetain = self;
     self.completionBlock = completion;
-    
+
     MFMailComposeViewController *vc = [[MFMailComposeViewController alloc] init];
     [vc setMailComposeDelegate:self];
     [vc setSubject:subject];
     if (address)
         [vc setToRecipients:@[address]];
     [vc setMessageBody:body isHTML:NO];
-    
+
     [parentVC presentViewController:vc animated:YES completion:nil];
 }
 
-- (void)mailComposeController:(MFMailComposeViewController *)controller didFinishWithResult:(MFMailComposeResult)result error:(NSError *)error
-{
+- (void)mailComposeController:(MFMailComposeViewController *)controller didFinishWithResult:(MFMailComposeResult)result error:(NSError *)error {
     [controller dismissViewControllerAnimated:YES completion:nil];
-    
+
     if (self.completionBlock)
         self.completionBlock(result == MFMailComposeResultCancelled, error);
-    
+
     self.completionBlock = nil;
     self.selfRetain = nil;
 }
+
+- (void)openInbox {
+    [[UIApplication sharedApplication] openURL:[NSURL URLWithString:@"message://"]];
+}
+
 
 @end
 
@@ -231,33 +230,27 @@
 
 static NSString *serviceName;
 
-+ (NSString *)name
-{
++ (NSString *)name {
     return serviceName;
 }
 
-+ (void)setName:(NSString *)name
-{
++ (void)setName:(NSString *)name {
     serviceName = name;
 }
 
-- (instancetype)init
-{
+- (instancetype)init {
     self = [super init];
-    if (self)
-    {
+    if (self) {
         self.name = (serviceName ?: @"Copy address to pasteboard");
     }
     return self;
 }
 
-- (BOOL)isAvailable
-{
+- (BOOL)isAvailable {
     return YES;
 }
 
-- (void)openWithAddress:(NSString *)address subject:(NSString *)subject parentVC:(UIViewController *)parentVC completion:(void (^)(BOOL, NSError *))completion
-{
+- (void)openWithAddress:(NSString *)address subject:(NSString *)subject parentVC:(UIViewController *)parentVC completion:(void (^)(BOOL, NSError *))completion {
     [[UIPasteboard generalPasteboard] setString:address];
     if (completion)
         completion(NO, nil);

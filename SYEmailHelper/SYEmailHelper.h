@@ -9,7 +9,7 @@
 #import <UIKit/UIKit.h>
 #import "SYEmailService.h"
 
-extern NSString * const SYEmailHelperErrorDomain;
+extern NSString *const SYEmailHelperErrorDomain;
 
 typedef enum : NSUInteger {
     SYEmailHelperErrorCode_NoServiceAvailable,
@@ -18,9 +18,9 @@ typedef enum : NSUInteger {
 
 @interface SYEmailHelper : NSObject
 
-@property (nonatomic, strong) NSString *actionSheetTitleText;
-@property (nonatomic, strong) NSString *actionSheetCancelButtonText;
-@property (nonatomic, assign) BOOL showCopyToPasteboard;
+@property(nonatomic, strong) NSString *actionSheetTitleText;
+@property(nonatomic, strong) NSString *actionSheetCancelButtonText;
+@property(nonatomic, assign) BOOL showCopyToPasteboard;
 
 + (instancetype)shared;
 
@@ -28,6 +28,9 @@ typedef enum : NSUInteger {
                         subject:(NSString *)subject
                            body:(NSString *)body
                    presentingVC:(UIViewController *)presentingVC
-                     completion:(void(^)(BOOL userCancelled, SYEmailService *service, NSError *error))completion;
+                     completion:(void (^)(BOOL userCancelled, SYEmailService *service, NSError *error))completion;
+
+
+- (void)openEmailClienChooserFromViewController:(UIViewController *)presentingVC;
 
 @end

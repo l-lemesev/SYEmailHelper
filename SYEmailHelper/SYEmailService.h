@@ -23,6 +23,9 @@
                parentVC:(UIViewController *)parentVC
              completion:(void(^)(BOOL userCancelled, NSError *nativeError))completion;
 
+
+- (void)openInbox;
+
 @end
 
 @interface SYEmailServiceApp : SYEmailService
