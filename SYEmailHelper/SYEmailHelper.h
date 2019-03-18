@@ -31,6 +31,8 @@ typedef enum : NSUInteger {
                      completion:(void (^)(BOOL userCancelled, SYEmailService *service, NSError *error))completion;
 
 
-- (void)openEmailClienChooserFromViewController:(UIViewController *)presentingVC;
+- (void)openEmailClienChooserFromViewController:(UIViewController *)presentingVC
+                                     sourceRect:(CGRect)sourceRect
+                                     sourceView:(UIView*)sourceView;
 
 @end

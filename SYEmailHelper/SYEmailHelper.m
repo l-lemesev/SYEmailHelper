@@ -87,7 +87,9 @@ NSString *const SYEmailHelperErrorDomain = @"SYEmailHelperErrorDomain";
 }
 
 
-- (void)openEmailClienChooserFromViewController:(UIViewController *)presentingVC {
+- (void)openEmailClienChooserFromViewController:(UIViewController *)presentingVC
+                                     sourceRect:(CGRect)sourceRect
+                                     sourceView:(UIView*)sourceView {
     NSArray <SYEmailService *> *services = [SYEmailService availableServices];
 
     if (!self.showCopyToPasteboard) {
@@ -109,6 +111,8 @@ NSString *const SYEmailHelperErrorDomain = @"SYEmailHelperErrorDomain";
     UIAlertController *actionSheet = [UIAlertController alertControllerWithTitle:self.actionSheetTitleText
                                                                          message:nil
                                                                   preferredStyle:UIAlertControllerStyleActionSheet];
+    actionSheet.popoverPresentationController.sourceRect = sourceRect;
+    actionSheet.popoverPresentationController.sourceView = sourceView;
     for (SYEmailService *service in services) {
         [actionSheet addAction:
                 [UIAlertAction actionWithTitle:service.name style:UIAlertActionStyleDefault handler:^(UIAlertAction *_Nonnull action) {
